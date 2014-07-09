@@ -29,6 +29,7 @@ module.exports = function(grunt) {
 
     testWatchTasks = [
       'clear',
+
       'karma:watch:run'
     ],
 
@@ -38,6 +39,14 @@ module.exports = function(grunt) {
 
       // test components
       'karma:travis'
+    ],
+
+    resetTasks = [
+      // clean build directory
+      'clean:build',
+
+      // cleans previous generated release
+      'clean:release'
     ],
 
     releaseTasks = [
@@ -74,6 +83,12 @@ module.exports = function(grunt) {
       // creates custom license in header
       'cssmin:createMinCSSPackage',
 
+      // create npm package
+      'copy:npm',
+
+      // replace $.fn.xyz with module.exports and require('jquery')
+      'replace:npm',
+
       // cleans previous generated release
       'clean:release'
 
@@ -84,7 +99,7 @@ module.exports = function(grunt) {
       'copy:buildToRTL',
 
       // create rtl release
-      'cssjanus:rtl'
+      'rtlcss:rtl'
     ],
 
     docTasks = [
@@ -105,7 +120,8 @@ module.exports = function(grunt) {
       'copy:specToDocs'
     ],
 
-    buildTasks = releaseTasks.concat(rtlTasks).concat(docTasks),
+    buildTasks     = releaseTasks.concat(rtlTasks).concat(docTasks),
+    testWatchTasks = testTasks.concat(watchTasks),
 
     setWatchTests = function(action, filePath) {
       var
@@ -170,7 +186,7 @@ module.exports = function(grunt) {
           'test/**/*.js',
           'src/**/*.js'
         ],
-        tasks : testWatchTasks
+        tasks : watchTasks
       },
       src: {
         files: [
@@ -212,10 +228,11 @@ module.exports = function(grunt) {
           'last 2 version',
           '> 1%',
           'opera 12.1',
+          'ff >= 10',
           'safari 6',
           'ie 9',
           'bb 10',
-          'android 4'
+          'android 3'
         ]
       },
       prefixBuild: {
@@ -275,7 +292,7 @@ module.exports = function(grunt) {
       }
     },
 
-    cssjanus: {
+    rtlcss: {
       rtl: {
         expand : true,
         cwd    : 'build/',
@@ -419,6 +436,24 @@ module.exports = function(grunt) {
         ]
       },
 
+
+      npm: {
+        files: [
+          {
+            expand : true,
+            cwd    : 'build/uncompressed',
+            src    : [
+              '**/*'
+            ],
+            dest: 'npm'
+          },
+          {
+            src: 'package.json',
+            dest: 'npm/package.json'
+          }
+        ]
+      },
+
       // create new rtl assets
       buildToRTL: {
         files: [
@@ -556,6 +591,31 @@ module.exports = function(grunt) {
       }
     },
 
+    replace: {
+      npm: {
+        options: {
+          patterns: [
+            {
+              match: /\$.fn.\w+/g,
+              replacement: 'module.exports'
+            },
+            {
+              match: /jQuery/g,
+              replacement: 'require("jquery")'
+            }
+          ]
+        },
+        files: [
+          {
+            expand : true,
+            src    : '**/*.js',
+            cwd    : 'build/uncompressed',
+            dest   : 'npm'
+          }
+        ]
+      }
+    },
+
     uglify: {
 
       minifyJS: {
@@ -622,12 +682,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-less');
+  grunt.loadNpmTasks('grunt-replace');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
 
   grunt.loadNpmTasks('grunt-autoprefixer');
   grunt.loadNpmTasks('grunt-docco-multi');
-  grunt.loadNpmTasks('grunt-cssjanus');
+  grunt.loadNpmTasks('grunt-rtlcss');
   grunt.loadNpmTasks('grunt-clear');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-karma-coveralls');
@@ -641,6 +702,7 @@ module.exports = function(grunt) {
   grunt.registerTask('rtl', rtlTasks);
   grunt.registerTask('docs', docTasks);
   grunt.registerTask('build', buildTasks);
+  grunt.registerTask('reset', resetTasks);
 
   // compiles only changed less files <https://npmjs.org/package/grunt-contrib-watch>
   grunt.event.on('watch', setWatchFiles);

@@ -29,6 +29,7 @@ type        : 'UI Module'
       <h3 class="ui header">Popup</h3>
       <p>A standard popup</p>
       <i class="heart circular icon link" data-content="Hello, I am a pop-up."></i>
+      <i class="heart circular icon link" title="Hello, I am a pop-up."></i>
     </div>
 
     <div class="example">
@@ -89,7 +90,6 @@ type        : 'UI Module'
             <li><code>data-variation</code>: the popup variation to use </li>
             <li><code>data-offset</code>: a pixel offset correction for popup</li>
             <li><code>data-position</code>: the side to position popup on</li>
-            <li><code>data-variation</code>: the popup variation to use </li>
           </ul>
         </div>
       </div>
@@ -375,6 +375,46 @@ type        : 'UI Module'
         </tr>
       </tbody>
     </table>
+
+
+    <div class="ui horizontal section divider"><i class="icon setting"></i></div>
+    <h3 class="ui header">
+      Callbacks
+      <div class="sub header">Callbacks specify a function to occur after a specific behavior.</div>
+    </h3>
+
+    <table class="ui celled sortable definition table segment">
+      <thead>
+        <tr>
+        <th class="four wide">Setting</th>
+        <th>Context</th>
+        <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>onCreate</td>
+          <td>Popup</td>
+          <td>Is called after a popup is created</td>
+        </tr>
+        <tr>
+          <td>onRemove</td>
+          <td>Popup</td>
+          <td>Is called after a popup is removed from the page</td>
+        </tr>
+        <tr>
+          <td>onShow</td>
+          <td>Element</td>
+          <td>Is called after a popup is shown.</td>
+        </tr>
+        <tr>
+          <td>onHide</td>
+          <td>Element</td>
+          <td>Is called after a popup is hidden.</td>
+        </tr>
+      </tbody>
+    </table>
+
 
     <h3 class="ui header">
       Content Settings

@@ -85,15 +85,23 @@ $.fn.accordion = function(parameters) {
             ;
             module.toggle(index);
           },
-          resetStyle: function() {
-            module.verbose('Resetting styles on element', this);
-            $(this)
-              .attr('style', '')
-              .removeAttr('style')
-              .children()
+          resetDisplay: function() {
+            $(this).css('display', '');
+            if( $(this).attr('style') == '') {
+              $(this)
                 .attr('style', '')
                 .removeAttr('style')
-            ;
+              ;
+            }
+          },
+          resetOpacity: function() {
+            $(this).css('opacity', '');
+            if( $(this).attr('style') == '') {
+              $(this)
+                .attr('style', '')
+                .removeAttr('style')
+              ;
+            }
           }
         },
 
@@ -121,7 +129,10 @@ $.fn.accordion = function(parameters) {
           var
             $activeTitle     = $title.eq(index),
             $activeContent   = $activeTitle.next($content),
-            $previousTitle   = $activeTitle.siblings(selector.title).filter('.' + className.active),
+            $otherSections   = module.is.menu()
+              ? $activeTitle.parent().siblings(selector.item).find(selector.title)
+              : $activeTitle.siblings(selector.title),
+            $previousTitle   = $otherSections.filter('.' + className.active),
             $previousContent = $previousTitle.next($title),
             contentIsOpen    =  ($previousTitle.size() > 0)
           ;
@@ -134,19 +145,17 @@ $.fn.accordion = function(parameters) {
               $previousContent
                 .stop()
                 .children()
+                  .stop()
                   .animate({
                     opacity: 0
-                  }, settings.duration, module.event.resetStyle)
+                  }, settings.duration, module.event.resetOpacity)
                   .end()
                 .slideUp(settings.duration , settings.easing, function() {
                   $previousContent
                     .removeClass(className.active)
-                    .attr('style', '')
-                    .removeAttr('style')
                     .children()
-                      .attr('style', '')
-                      .removeAttr('style')
                   ;
+                  $.proxy(module.event.resetDisplay, this)();
                 })
               ;
             }
@@ -156,15 +165,16 @@ $.fn.accordion = function(parameters) {
             $activeContent
               .stop()
               .children()
-                .attr('style', '')
-                .removeAttr('style')
+                .stop()
+                .animate({
+                  opacity: 1
+                }, settings.duration)
                 .end()
               .slideDown(settings.duration, settings.easing, function() {
                 $activeContent
                   .addClass(className.active)
-                  .attr('style', '')
-                  .removeAttr('style')
                 ;
+                $.proxy(module.event.resetDisplay, this)();
                 $.proxy(settings.onOpen, $activeContent)();
                 $.proxy(settings.onChange, $activeContent)();
               })
@@ -186,21 +196,23 @@ $.fn.accordion = function(parameters) {
             .show()
             .stop()
             .children()
+              .stop()
               .animate({
                 opacity: 0
-              }, settings.duration, module.event.resetStyle)
+              }, settings.duration, module.event.resetOpacity)
               .end()
             .slideUp(settings.duration, settings.easing, function(){
-              $activeContent
-                .attr('style', '')
-                .removeAttr('style')
-              ;
+              $.proxy(module.event.resetDisplay, this)();
               $.proxy(settings.onClose, $activeContent)();
               $.proxy(settings.onChange, $activeContent)();
             })
           ;
         },
-
+        is: {
+          menu: function () {
+            return $module.hasClass(className.menu);
+          }
+        },
         setting: function(name, value) {
           if( $.isPlainObject(name) ) {
             $.extend(true, settings, name);
@@ -305,13 +317,14 @@ $.fn.accordion = function(parameters) {
         },
         invoke: function(query, passedArguments, context) {
           var
+            object = instance,
             maxDepth,
             found,
             response
           ;
           passedArguments = passedArguments || queryArguments;
           context         = element         || context;
-          if(typeof query == 'string' && instance !== undefined) {
+          if(typeof query == 'string' && object !== undefined) {
             query    = query.split(/[\. ]/);
             maxDepth = query.length - 1;
             $.each(query, function(depth, value) {
@@ -319,22 +332,21 @@ $.fn.accordion = function(parameters) {
                 ? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
                 : query
               ;
-              if( $.isPlainObject( instance[camelCaseValue] ) && (depth != maxDepth) ) {
-                instance = instance[camelCaseValue];
+              if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
+                object = object[camelCaseValue];
               }
-              else if( instance[camelCaseValue] !== undefined ) {
-                found = instance[camelCaseValue];
+              else if( object[camelCaseValue] !== undefined ) {
+                found = object[camelCaseValue];
                 return false;
               }
-              else if( $.isPlainObject( instance[value] ) && (depth != maxDepth) ) {
-                instance = instance[value];
+              else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
+                object = object[value];
               }
-              else if( instance[value] !== undefined ) {
-                found = instance[value];
+              else if( object[value] !== undefined ) {
+                found = object[value];
                 return false;
               }
               else {
-                module.error(error.method, query);
                 return false;
               }
             });
@@ -381,7 +393,7 @@ $.fn.accordion.settings = {
   name        : 'Accordion',
   namespace   : 'accordion',
 
-  debug       : true,
+  debug       : false,
   verbose     : true,
   performance : true,
 
@@ -400,12 +412,15 @@ $.fn.accordion.settings = {
   },
 
   className   : {
-    active : 'active'
+    active : 'active',
+    menu   : 'menu',
   },
 
   selector    : {
     title   : '.title',
-    content : '.content'
+    content : '.content',
+    menu    : '.menu',
+    item    : '.item',
   }
 
 

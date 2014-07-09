@@ -202,15 +202,13 @@ $.fn.sidebar = function(parameters) {
         add: {
           bodyCSS: function(direction, distance) {
             var
-              invertDirection,
               style
             ;
             if(direction !== className.bottom) {
-              invertDirection = direction === 'right' ? -1 : 1;
               style = ''
                 + '<style title="' + namespace + '">'
                 + 'body.pushed {'
-                + '  margin-left: ' + invertDirection * distance + 'px !important;'
+                + '  margin-' + direction + ': ' + distance + 'px !important;'
                 + '}'
                 + '</style>'
               ;
@@ -402,13 +400,14 @@ $.fn.sidebar = function(parameters) {
         },
         invoke: function(query, passedArguments, context) {
           var
+            object = instance,
             maxDepth,
             found,
             response
           ;
           passedArguments = passedArguments || queryArguments;
           context         = element         || context;
-          if(typeof query == 'string' && instance !== undefined) {
+          if(typeof query == 'string' && object !== undefined) {
             query    = query.split(/[\. ]/);
             maxDepth = query.length - 1;
             $.each(query, function(depth, value) {
@@ -416,22 +415,21 @@ $.fn.sidebar = function(parameters) {
                 ? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
                 : query
               ;
-              if( $.isPlainObject( instance[camelCaseValue] ) && (depth != maxDepth) ) {
-                instance = instance[camelCaseValue];
+              if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
+                object = object[camelCaseValue];
               }
-              else if( instance[camelCaseValue] !== undefined ) {
-                found = instance[camelCaseValue];
+              else if( object[camelCaseValue] !== undefined ) {
+                found = object[camelCaseValue];
                 return false;
               }
-              else if( $.isPlainObject( instance[value] ) && (depth != maxDepth) ) {
-                instance = instance[value];
+              else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
+                object = object[value];
               }
-              else if( instance[value] !== undefined ) {
-                found = instance[value];
+              else if( object[value] !== undefined ) {
+                found = object[value];
                 return false;
               }
               else {
-                module.error(error.method, query);
                 return false;
               }
             });
@@ -480,8 +478,8 @@ $.fn.sidebar.settings = {
   name        : 'Sidebar',
   namespace   : 'sidebar',
 
+  debug       : false,
   verbose     : true,
-  debug       : true,
   performance : true,
 
   useCSS      : true,
